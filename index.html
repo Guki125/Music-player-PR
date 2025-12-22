@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VibePlayer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  </head>
+  <body>
+    <div id="app">
+      <main class="player-container">
+        
+        <section class="album-art-carousel">
+            <div class="carousel-scene">
+                <div class="diskette">
+                    <img src="" alt="" draggable="false"/>
+                </div>
+                <div class="diskette">
+                    <img src="" alt="" draggable="false"/>
+                </div>
+                <div class="diskette">
+                    <img src="" alt="" draggable="false"/>
+                </div>
+            </div>
+        </section>
+
+        <div class="player-info-panel">
+            
+            <nav class="player-nav">
+                <button class="btn-icon" data-bs-toggle="modal" data-bs-target="#infoModal">
+                    <i class="bi bi-info-circle"></i>
+                </button>
+                
+                <span>SYSTEM ONLINE</span>
+                
+                <button class="btn-icon" id="search-toggle-btn">
+                    <i class="bi bi-search" id="search-icon"></i>
+                </button>
+            </nav>
+
+            <div class="search-bar hidden" id="search-bar">
+                <input type="text" id="search-input" placeholder="> Search track..." autocomplete="off">
+            </div>
+
+            <section class="track-info">
+                <h2 id="track-title">Loading...</h2>
+                <p id="artist-name">Please wait</p>
+            </section>
+
+            <section class="progress-area">
+                <div class="progress-bar">
+                    <div class="progress-current" id="progress"></div>
+                </div>
+                <div class="time-codes">
+                    <span id="current-time">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+            </section>
+
+            <section class="controls">
+                <button class="btn-control" id="prev-btn"><i class="bi bi-skip-backward-fill"></i></button>
+                <button class="btn-control play-btn" id="play-btn">
+                    <i class="bi bi-play-fill" id="play-icon"></i>
+                </button>
+                <button class="btn-control" id="next-btn"><i class="bi bi-skip-forward-fill"></i></button>
+            </section>
+        </div>
+
+        <audio id="audio-element"></audio>
+      </main>
+    </div>
+
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #111; color: #fff; border: 1px solid #00ff88;">
+          <div class="modal-header" style="border-bottom: 1px solid rgba(0, 255, 136, 0.2);">
+            <h5 class="modal-title">About VibePlayer 🎵</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Music Player Project</strong> — навчальний застосунок.</p>
+            <p>Реалізований функціонал:</p>
+            
+            <ul class="small" style="color: #ddd; line-height: 1.8;">
+                <li>Робота з iTunes API (Axios)</li>
+                <li>Карусель обкладинок (3D CSS)</li>
+                <li>Збереження історії (LocalStorage)</li>
+                <li>Bootstrap Компоненти</li>
+            </ul>
+            
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid rgba(0, 255, 136, 0.2);">
+            <button type="button" class="btn btn-sm btn-outline-light" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pagination-container" class="text-center mt-3 hidden" style="position: absolute; bottom: 10px; left: 0; right: 0; z-index: 50;">
+        <button id="load-more-btn" class="btn btn-sm btn-outline-success" style="border-radius: 20px; background: rgba(0,0,0,0.8);">
+            Load More <i class="bi bi-arrow-down-circle"></i>
+        </button>
+    </div>
+    
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
