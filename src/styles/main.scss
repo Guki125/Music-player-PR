@@ -12,14 +12,16 @@ $card-bg: #111111;
 // --- Глобальні ---
 body {
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
   background: radial-gradient(circle at 50% 50%, #1a1a1a, #000000);
   color: $text-main;
   min-height: 100vh;
+  // Використовуємо dvh для мобілок (враховує адресний рядок)
+  min-height: 100dvh; 
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
+  overflow: hidden; // Забороняємо скрол всієї сторінки
 }
 
 // --- Контейнер ---
@@ -35,9 +37,23 @@ body {
   box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
   
   display: grid;
+  // ПК версія: 380px зліва, решта справа
   grid-template-columns: 380px 1fr;
   padding: 0; 
   overflow: hidden;
+  transition: all 0.3s ease;
+
+  // --- MOBILE ADAPTATION (Телефони) ---
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 100dvh; // На весь екран
+    border-radius: 0; // Прибираємо кути
+    border: none;
+    
+    // Міняємо сітку на вертикальну
+    grid-template-columns: 1fr; 
+    grid-template-rows: 45% 55%; // 45% висоти під диски, 55% під меню
+  }
 }
 
 // --- Карусель ---
@@ -50,6 +66,12 @@ body {
   align-items: center;
   perspective: 1000px;
   z-index: 10;
+  
+  // На мобільному піднімаємо трохи вище або центруємо
+  @media (max-width: 768px) {
+    align-items: flex-end; // Притискаємо до низу верхньої секції
+    padding-bottom: 20px;
+  }
 
   .carousel-scene {
     position: relative;
@@ -57,6 +79,11 @@ body {
     height: 280px;
     transform-style: preserve-3d;
     pointer-events: auto; 
+
+    // Зменшуємо сцену на мобільному
+    @media (max-width: 768px) {
+      transform: scale(0.85); 
+    }
   }
 }
 
@@ -104,6 +131,11 @@ body {
     filter: grayscale(100%) brightness(0.4);
     cursor: pointer;
     &:hover { filter: grayscale(0%) brightness(0.6); opacity: 0.9; }
+    
+    // На мобільному стискаємо сильніше, щоб влізло в екран
+    @media (max-width: 768px) {
+        transform: translate3d(-60%, 0, -100px) rotateY(25deg) scale(0.8);
+    }
   }
 
   &.pos-next {
@@ -113,6 +145,10 @@ body {
     filter: grayscale(100%) brightness(0.4);
     cursor: pointer;
     &:hover { filter: grayscale(0%) brightness(0.6); opacity: 0.9; }
+
+    @media (max-width: 768px) {
+        transform: translate3d(60%, 0, -100px) rotateY(-25deg) scale(0.8);
+    }
   }
 
   &.pos-hidden-left {
@@ -138,11 +174,19 @@ body {
 .player-info-panel {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: center; // Центрування по вертикалі на ПК
   height: 100%;
   padding: 40px;
   position: relative;
   z-index: 20;
+  box-sizing: border-box;
+
+  // Адаптація панелі
+  @media (max-width: 768px) {
+    justify-content: flex-start; // На телефоні притискаємо до верху своєї секції
+    padding: 20px 25px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); // Затемнення знизу
+  }
 }
 
 // Навігація
@@ -153,7 +197,7 @@ body {
   margin-bottom: 30px;
   color: $text-muted;
   position: relative;
-  z-index: 60; // Базовий рівень
+  z-index: 60; 
   
   .btn-icon {
     background: transparent;
@@ -162,8 +206,6 @@ body {
     font-size: 1.3rem;
     cursor: pointer;
     transition: color 0.3s;
-    
-    // Кнопка має бути вище за все, щоб працював клік
     position: relative;
     z-index: 100; 
 
@@ -182,16 +224,22 @@ body {
   }
 }
 
-// Пошук
+// --- ПОШУК (Виправлення вильоту за межі) ---
 .search-bar {
     position: absolute;
-    top: 35px; // Підняли вище
+    top: 35px; 
     right: 40px; 
-    width: 300px;
-    z-index: 80; // Вищий за текст (60), але нижчий за кнопку (100)
-    
+    width: 300px; 
+    z-index: 80;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
+    // Адаптація пошуку
+    @media (max-width: 768px) {
+        width: calc(100% - 50px); // На всю ширину мінус відступи
+        right: 25px; // Вирівнювання по центру
+        top: 60px; // Трохи нижче меню
+    }
+
     &.hidden { 
         opacity: 0;
         pointer-events: none;
@@ -203,10 +251,7 @@ body {
         padding: 12px 15px;
         border-radius: 8px;
         border: 1px solid $primary-color;
-        
-        // Чорний фон перекриває напис знизу
         background: #000000; 
-        
         color: $primary-color;
         font-family: 'Consolas', monospace;
         font-size: 1rem;
@@ -217,19 +262,21 @@ body {
     }
 }
 
-// Трек
+// Трек (Виправлення шрифту)
 .track-info {
   margin-bottom: 30px;
   position: relative;
   z-index: 25;
   
   h2 {
-    font-size: 2.5rem;
+    // ВАЖЛИВО: clamp(мін, бажанний, макс). Шрифт буде меншим на телефоні.
+    font-size: clamp(1.8rem, 5vw, 2.5rem); 
     font-weight: 800;
     margin: 0 0 5px 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%; // Щоб не вилазив за межі
   }
   
   p {
@@ -248,6 +295,10 @@ body {
   position: relative;
   z-index: 30;
   
+  @media (max-width: 768px) {
+      margin-bottom: 20px; // Менший відступ на телефоні
+  }
+
   .progress-bar {
     height: 6px;
     background: rgba(255,255,255, 0.1);
@@ -286,6 +337,12 @@ body {
   gap: 30px;
   z-index: 30;
   
+  // На мобільному можна розсунути кнопки
+  @media (max-width: 768px) {
+      justify-content: space-around;
+      gap: 10px;
+  }
+
   .btn-control {
     background: transparent;
     border: none;
@@ -325,4 +382,11 @@ body {
     
     &:active { transform: scale(0.95); }
   }
+}
+
+// Кнопка Load More
+#pagination-container {
+    @media (max-width: 768px) {
+        bottom: 20px;
+    }
 }
