@@ -6,34 +6,44 @@ import './styles/main.scss';
 import { Player } from './js/player.js';
 import { searchTracks } from './js/api.js';
 
-// --- Дефолтний плейлист (якщо історія пуста) ---
+// --- ВИПРАВЛЕНО: Надійний дефолтний плейлист ---
+// Використовуємо SoundHelix, бо iTunes посилання "живуть" недовго
 const defaultPlaylist = [
   {
-    title: "Don't Start Now",
-    artist: "Dua Lipa",
-    cover: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/8d/af/2e/8daf2e5b-38ba-77d0-1e96-a6fc5c721f47/190296996347.jpg/600x600bb.jpg",
-    url: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/05/25/38/052538e1-5820-e22a-2898-17215167b579/mzaf_14958045622379326463.plus.aac.p.m4a"
+    title: "Demo Song 1",
+    artist: "SoundHelix",
+    cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=600&auto=format&fit=crop",
+    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   },
   {
-    title: "Blinding Lights",
-    artist: "The Weeknd",
-    cover: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/f6/c6/24/f6c62423-f232-c11e-b81b-a53c48564177/19UMGIM86064.rgb.jpg/600x600bb.jpg",
-    url: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/48/4d/86/484d86b6-d242-6e2b-f215-a20c3558f395/mzaf_10526362402120015525.plus.aac.p.m4a"
+    title: "Demo Song 2",
+    artist: "SoundHelix",
+    cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop",
+    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
   },
   {
-    title: "Neon Dreams",
-    artist: "Retro Wave",
-    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-    cover: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400&auto=format&fit=crop"
+    title: "Demo Song 3",
+    artist: "SoundHelix",
+    cover: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=600&auto=format&fit=crop",
+    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
   }
 ];
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // --- Змінні стану ---
+  
+  const welcomeScreen = document.getElementById('welcome-screen');
+  
+  // Через 2.5 секунди додаємо клас .hide, який запускає CSS-анімацію зникнення
+  setTimeout(() => {
+      welcomeScreen.classList.add('hide');
+  }, 2500);
+
+  // Змінні стану
   let currentQuery = '';
   let currentOffset = 0;
+  let isSearching = false; // Блокування повторних натискань
 
-  // --- Елементи UI ---
+  // Елементи UI
   const searchInput = document.getElementById('search-input');
   const searchBar = document.getElementById('search-bar');
   const searchToggleBtn = document.getElementById('search-toggle-btn');
@@ -42,39 +52,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   const loadMoreBtn = document.getElementById('load-more-btn');
   const paginationContainer = document.getElementById('pagination-container');
 
-  // --- 1. Відновлення сесії (LocalStorage) ---
+  // --- 1. Відновлення сесії ---
   const savedQuery = localStorage.getItem('lastSearch');
   let startPlaylist = defaultPlaylist;
 
+  // Якщо був збережений пошук, пробуємо його відновити
   if (savedQuery) {
       try {
-          // Якщо користувач щось шукав, спробуємо це завантажити
           const results = await searchTracks(savedQuery, 0);
-          if (results.length > 0) {
+          if (results && results.length > 0) {
               startPlaylist = results;
               currentQuery = savedQuery;
-              currentOffset = 25; // Наступна сторінка буде з 25-го треку
-              
-              // Показуємо кнопку Load More
+              currentOffset = 25;
               paginationContainer.classList.remove('hidden');
-              console.log(`Відновлено попередню сесію: ${savedQuery}`);
+          } else {
+              // Якщо збережений пошук нічого не дав - чистимо його
+              localStorage.removeItem('lastSearch');
           }
       } catch (e) {
-          console.warn("Не вдалося відновити сесію, використовуємо дефолт.");
+          console.warn("Збій відновлення сесії, вантажимо дефолт.");
       }
   }
 
-  // --- 2. Ініціалізація плеєра ---
+  // --- 2. Старт плеєра ---
+  // Створюємо плеєр з ГАРАНТОВАНО робочим плейлистом
   const player = new Player(startPlaylist);
 
-  // --- 3. Логіка Пошуку (Відкриття/Закриття) ---
+  // --- 3. UI Пошуку ---
   searchToggleBtn.addEventListener('click', () => {
     const isHidden = searchBar.classList.toggle('hidden');
     if (!isHidden) {
-        searchIcon.classList.add('text-primary'); // Підсвітка іконки
+        searchIcon.classList.add('text-primary');
         searchInput.focus();
-        
-        // Якщо є збережений запит, підставляємо його в поле, щоб не вводити заново
         if (currentQuery && searchInput.value === '') {
             searchInput.value = currentQuery;
         }
@@ -83,82 +92,82 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // --- 4. Обробка Enter в полі пошуку ---
-  searchInput.addEventListener('keypress', async (e) => {
-    if (e.key === 'Enter') {
+  // --- 4. Логіка пошуку (FIXED) ---
+  const performSearch = async () => {
       const query = searchInput.value.trim();
-      
-      if (query.length > 0) {
-        try {
-            // Візуалізація процесу
-            searchInput.style.opacity = '0.5';
-            
-            // Новий пошук -> скидаємо offset
-            currentOffset = 0;
-            currentQuery = query;
+      if (!query || isSearching) return;
 
-            const newTracks = await searchTracks(query, 0);
-            
-            if (newTracks.length > 0) {
-                // Оновлюємо плейлист
-                player.updatePlaylist(newTracks);
-                
-                // Зберігаємо запит
-                localStorage.setItem('lastSearch', query);
+      isSearching = true; // Блокуємо повторний запуск
+      searchInput.style.opacity = '0.5';
 
-                // Оновлюємо UI
-                searchBar.classList.add('hidden');
-                searchIcon.classList.remove('text-primary');
-                
-                // Вмикаємо пагінацію для нового запиту
-                paginationContainer.classList.remove('hidden');
-                loadMoreBtn.style.display = 'inline-block'; // На випадок якщо була схована
-                currentOffset = 25; 
-            } else {
-                alert('Нічого не знайдено');
-                paginationContainer.classList.add('hidden');
-            }
-        } catch (error) {
-            console.error("Search error:", error);
-            alert("Помилка при пошуку даних");
-        } finally {
-            searchInput.style.opacity = '1';
-        }
+      try {
+          // Скидаємо offset для нового пошуку
+          currentOffset = 0;
+          currentQuery = query;
+
+          const newTracks = await searchTracks(query, 0);
+          
+          if (newTracks && newTracks.length > 0) {
+              // Успіх
+              player.updatePlaylist(newTracks);
+              localStorage.setItem('lastSearch', query);
+
+              // Ховаємо пошук
+              searchBar.classList.add('hidden');
+              searchIcon.classList.remove('text-primary');
+              
+              // Пагінація
+              paginationContainer.classList.remove('hidden');
+              loadMoreBtn.style.display = 'inline-block';
+              currentOffset = 25; 
+          } else {
+              // Нічого не знайдено (але це не помилка коду)
+              console.log('API повернуло 0 треків');
+              alert('За вашим запитом нічого не знайдено.');
+              paginationContainer.classList.add('hidden');
+          }
+      } catch (error) {
+          console.error("Search critical error:", error);
+          // Не показуємо alert, якщо це просто скасування запиту
+          // alert("Помилка з'єднання з сервером"); 
+      } finally {
+          searchInput.style.opacity = '1';
+          isSearching = false; // Розблокуємо
       }
+  };
+
+  // Обробка Enter
+  searchInput.addEventListener('keydown', (e) => { // keydown надійніше за keypress
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Зупиняємо будь-яку дефолтну дію браузера
+      performSearch();
     }
   });
 
-  // --- 5. Логіка кнопки "Load More" ---
+  // --- 5. Логіка "Load More" ---
   loadMoreBtn.addEventListener('click', async () => {
-      if (!currentQuery) return;
+      if (!currentQuery || isSearching) return;
       
-      // Анімація завантаження на кнопці
       const originalText = loadMoreBtn.innerHTML;
       loadMoreBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
       loadMoreBtn.disabled = true;
+      isSearching = true;
 
       try {
-          // Запитуємо наступну порцію (зсув currentOffset)
           const moreTracks = await searchTracks(currentQuery, currentOffset);
           
-          if (moreTracks.length > 0) {
-              // Додаємо треки до існуючого плейлиста
-              // ВАЖЛИВО: переконайтесь, що метод addToPlaylist є у player.js
+          if (moreTracks && moreTracks.length > 0) {
               player.addToPlaylist(moreTracks);
-              
-              // Зсуваємо лічильник
               currentOffset += 25;
           } else {
-              alert("Більше треків немає.");
-              loadMoreBtn.style.display = 'none'; // Ховаємо кнопку, якщо все завантажили
+              loadMoreBtn.style.display = 'none';
           }
       } catch (e) {
           console.error("Pagination error:", e);
-          alert("Помилка завантаження додаткових треків");
       } finally {
-          // Повертаємо кнопку до життя
           loadMoreBtn.innerHTML = originalText;
           loadMoreBtn.disabled = false;
+          isSearching = false;
       }
   });
 });

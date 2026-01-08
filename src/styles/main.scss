@@ -1,3 +1,4 @@
+/* src/styles/main.scss */
 @use "sass:color";
 
 // --- Змінні ---
@@ -16,12 +17,11 @@ body {
   background: radial-gradient(circle at 50% 50%, #1a1a1a, #000000);
   color: $text-main;
   min-height: 100vh;
-  // Використовуємо dvh для мобілок (враховує адресний рядок)
   min-height: 100dvh; 
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden; // Забороняємо скрол всієї сторінки
+  overflow: hidden; 
 }
 
 // --- Контейнер ---
@@ -37,22 +37,20 @@ body {
   box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
   
   display: grid;
-  // ПК версія: 380px зліва, решта справа
   grid-template-columns: 380px 1fr;
   padding: 0; 
   overflow: hidden;
   transition: all 0.3s ease;
 
-  // --- MOBILE ADAPTATION (Телефони) ---
+  // --- MOBILE ADAPTATION ---
   @media (max-width: 768px) {
     width: 100%;
-    height: 100dvh; // На весь екран
-    border-radius: 0; // Прибираємо кути
+    height: 100dvh; 
+    border-radius: 0; 
     border: none;
     
-    // Міняємо сітку на вертикальну
     grid-template-columns: 1fr; 
-    grid-template-rows: 45% 55%; // 45% висоти під диски, 55% під меню
+    grid-template-rows: 45% 55%; 
   }
 }
 
@@ -67,9 +65,8 @@ body {
   perspective: 1000px;
   z-index: 10;
   
-  // На мобільному піднімаємо трохи вище або центруємо
   @media (max-width: 768px) {
-    align-items: flex-end; // Притискаємо до низу верхньої секції
+    align-items: flex-end; 
     padding-bottom: 20px;
   }
 
@@ -80,7 +77,6 @@ body {
     transform-style: preserve-3d;
     pointer-events: auto; 
 
-    // Зменшуємо сцену на мобільному
     @media (max-width: 768px) {
       transform: scale(0.85); 
     }
@@ -132,7 +128,6 @@ body {
     cursor: pointer;
     &:hover { filter: grayscale(0%) brightness(0.6); opacity: 0.9; }
     
-    // На мобільному стискаємо сильніше, щоб влізло в екран
     @media (max-width: 768px) {
         transform: translate3d(-60%, 0, -100px) rotateY(25deg) scale(0.8);
     }
@@ -174,18 +169,17 @@ body {
 .player-info-panel {
   display: flex;
   flex-direction: column;
-  justify-content: center; // Центрування по вертикалі на ПК
+  justify-content: center; 
   height: 100%;
   padding: 40px;
   position: relative;
   z-index: 20;
   box-sizing: border-box;
 
-  // Адаптація панелі
   @media (max-width: 768px) {
-    justify-content: flex-start; // На телефоні притискаємо до верху своєї секції
+    justify-content: flex-start; 
     padding: 20px 25px;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); // Затемнення знизу
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); 
   }
 }
 
@@ -206,6 +200,7 @@ body {
     font-size: 1.3rem;
     cursor: pointer;
     transition: color 0.3s;
+    // ВАЖЛИВО: Кнопки завжди зверху і на своєму місці
     position: relative;
     z-index: 100; 
 
@@ -221,10 +216,13 @@ body {
     font-size: 0.9rem;
     letter-spacing: 2px;
     text-transform: uppercase;
+    // Щоб текст не налізав на кнопки
+    margin: 0 10px;
+    text-align: center;
   }
 }
 
-// --- ПОШУК (Виправлення вильоту за межі) ---
+// --- ПОШУК ---
 .search-bar {
     position: absolute;
     top: 35px; 
@@ -233,11 +231,10 @@ body {
     z-index: 80;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
-    // Адаптація пошуку
     @media (max-width: 768px) {
-        width: calc(100% - 50px); // На всю ширину мінус відступи
-        right: 25px; // Вирівнювання по центру
-        top: 60px; // Трохи нижче меню
+        width: calc(100% - 50px); 
+        right: 25px; 
+        top: 60px; 
     }
 
     &.hidden { 
@@ -262,21 +259,31 @@ body {
     }
 }
 
-// Трек (Виправлення шрифту)
+// --- ТРЕК (ВИПРАВЛЕННЯ ДОВГИХ НАЗВ) ---
 .track-info {
   margin-bottom: 30px;
   position: relative;
   z-index: 25;
+  // Важливо: контейнер не повинен виходити за межі батька
+  max-width: 100%;
   
   h2 {
-    // ВАЖЛИВО: clamp(мін, бажанний, макс). Шрифт буде меншим на телефоні.
     font-size: clamp(1.8rem, 5vw, 2.5rem); 
     font-weight: 800;
     margin: 0 0 5px 0;
+    
+    // ВАЖЛИВО: Ці 3 рядки обрізають довгий текст
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%; // Щоб не вилазив за межі
+    
+    // Гарантуємо, що текст не розтягне контейнер
+    max-width: 100%; 
+    
+    // На ПК можна задати фіксовану максимальну ширину, якщо треба
+    @media (min-width: 769px) {
+        max-width: 350px;
+    }
   }
   
   p {
@@ -286,6 +293,11 @@ body {
     text-transform: uppercase;
     letter-spacing: 1.5px;
     margin: 0;
+    // Те саме для імені виконавця
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 }
 
@@ -296,7 +308,7 @@ body {
   z-index: 30;
   
   @media (max-width: 768px) {
-      margin-bottom: 20px; // Менший відступ на телефоні
+      margin-bottom: 20px; 
   }
 
   .progress-bar {
@@ -337,7 +349,6 @@ body {
   gap: 30px;
   z-index: 30;
   
-  // На мобільному можна розсунути кнопки
   @media (max-width: 768px) {
       justify-content: space-around;
       gap: 10px;
@@ -389,4 +400,79 @@ body {
     @media (max-width: 768px) {
         bottom: 20px;
     }
+}
+
+// ПРЕЛОАДЕР (той самий код)
+#welcome-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.8s ease-out, visibility 0.8s;
+    
+    &.hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .welcome-content {
+        text-align: center;
+        
+        .neon-title {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #fff;
+            margin: 0;
+            text-shadow: 
+                0 0 10px #00ff88,
+                0 0 20px #00ff88,
+                0 0 40px #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        .neon-subtitle {
+            color: #888;
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards 0.5s;
+        }
+
+        .loader-line {
+            width: 0;
+            height: 2px;
+            background: #00ff88;
+            margin: 20px auto 0;
+            box-shadow: 0 0 10px #00ff88;
+            animation: loadLine 2s ease-in-out forwards;
+        }
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88; }
+    50% { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88, 0 0 60px #00ff88; }
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+@keyframes loadLine {
+    0% { width: 0; opacity: 1; }
+    80% { width: 200px; opacity: 1; }
+    100% { width: 200px; opacity: 0; }
+}
+
+@media (max-width: 768px) {
+    .neon-title { font-size: 2.5rem !important; }
 }

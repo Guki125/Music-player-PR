@@ -9,15 +9,13 @@ export class Player {
     this.isAnimating = false;
     this.audio = document.getElementById('audio-element');
 
-    // Знаходимо всі дискети (має бути 3)
+    // Перевірка наявності елементів
     const diskElements = Array.from(document.querySelectorAll('.diskette'));
-    
     if (diskElements.length !== 3) {
-        console.error("Critical Error: HTML must contain exactly 3 .diskette elements!");
+        console.error("Critical: Need 3 .diskette elements");
         return;
     }
 
-    // Створюємо структуру (Items)
     this.items = [
         { el: diskElements[0], img: diskElements[0].querySelector('img') },
         { el: diskElements[1], img: diskElements[1].querySelector('img') },
@@ -33,16 +31,16 @@ export class Player {
       progressFill: document.getElementById('progress'),
       currentTime: document.getElementById('current-time'),
       duration: document.getElementById('duration'),
-      // Контейнер каруселі для кліків
       carouselScene: document.querySelector('.carousel-scene')
     };
 
     // Ініціалізація
     this.initCarousel();
-    this.updateAudioAndText(this.currentIndex);
+    this.updateAudioAndText(this.currentIndex, false); // false = не автоплей
     this.addEventListeners();
   }
 
+  // ... (getSafeIndex та initCarousel без змін) ...
   getSafeIndex(index) {
     const len = this.playlist.length;
     return (index % len + len) % len;
@@ -62,64 +60,56 @@ export class Player {
     this.items[2].el.className = 'diskette pos-next';
   }
 
-  // --- Навігація Вперед ---
+  // Навігація
   next() {
     if (this.isAnimating) return;
     this.isAnimating = true;
 
     this.currentIndex = this.getSafeIndex(this.currentIndex + 1);
-    this.updateAudioAndText(this.currentIndex);
-    if (this.isPlaying) this.playSafely();
+    this.updateAudioAndText(this.currentIndex, this.isPlaying); // Граємо тільки якщо вже грали
 
-    // Зсув класів
+    // Анімація...
     this.items[0].el.className = 'diskette pos-hidden-left';
     this.items[1].el.className = 'diskette pos-prev';
     this.items[2].el.className = 'diskette pos-active';
 
     setTimeout(() => {
-        const recycledItem = this.items.shift(); // Забираємо перший (лівий)
-        
+        const recycledItem = this.items.shift();
         recycledItem.el.classList.add('no-transition');
-        recycledItem.el.className = 'diskette pos-hidden-right no-transition'; // Телепорт направо
+        recycledItem.el.className = 'diskette pos-hidden-right no-transition';
         
-        // Вантажимо картинку майбутнього треку
         const futureIndex = this.getSafeIndex(this.currentIndex + 1);
         recycledItem.img.src = this.playlist[futureIndex].cover;
 
-        recycledItem.el.offsetHeight; // Force reflow
-
+        recycledItem.el.offsetHeight; 
         recycledItem.el.classList.remove('no-transition');
         recycledItem.el.className = 'diskette pos-next';
 
-        this.items.push(recycledItem); // Додаємо в кінець
+        this.items.push(recycledItem);
         this.isAnimating = false;
     }, 500);
   }
 
-  // --- Навігація Назад ---
   prev() {
     if (this.isAnimating) return;
     this.isAnimating = true;
 
     this.currentIndex = this.getSafeIndex(this.currentIndex - 1);
-    this.updateAudioAndText(this.currentIndex);
-    if (this.isPlaying) this.playSafely();
+    this.updateAudioAndText(this.currentIndex, this.isPlaying);
 
     this.items[2].el.className = 'diskette pos-hidden-right';
     this.items[1].el.className = 'diskette pos-next';
     this.items[0].el.className = 'diskette pos-active';
 
     setTimeout(() => {
-        const recycledItem = this.items.pop(); // Забираємо останній (правий)
-        
+        const recycledItem = this.items.pop();
         recycledItem.el.classList.add('no-transition');
-        recycledItem.el.className = 'diskette pos-hidden-left no-transition'; // Телепорт наліво
+        recycledItem.el.className = 'diskette pos-hidden-left no-transition';
         
         const futureIndex = this.getSafeIndex(this.currentIndex - 1);
         recycledItem.img.src = this.playlist[futureIndex].cover;
 
         recycledItem.el.offsetHeight;
-
         recycledItem.el.classList.remove('no-transition');
         recycledItem.el.className = 'diskette pos-prev';
 
@@ -128,16 +118,42 @@ export class Player {
     }, 500);
   }
 
-  // --- Аудіо ---
+  // Оновлена логіка аудіо
+  updateAudioAndText(index, shouldPlay = false) {
+    const track = this.playlist[index];
+    
+    // Оновлюємо текст
+    this.ui.title.textContent = track.title;
+    this.ui.artist.textContent = track.artist;
+    
+    // Скидаємо стилі помилки (якщо були)
+    this.ui.title.style.color = ''; 
+    
+    // Якщо трек новий - міняємо src
+    if (this.audio.src !== track.url) {
+        this.audio.src = track.url;
+        this.ui.progressFill.style.width = '0%';
+        this.ui.currentTime.textContent = '0:00';
+        
+        // ВАЖЛИВО: Не викликаємо play(), якщо це ініціалізація
+        if (shouldPlay) {
+            this.playSafely();
+        }
+    }
+  }
+
   async playSafely() {
     try {
         await this.audio.play();
         this.isPlaying = true;
         this.ui.playIcon.className = 'bi bi-pause-fill';
     } catch (e) {
-        console.warn("Autoplay blocked (user interaction required):", e);
-        this.isPlaying = false;
-        this.ui.playIcon.className = 'bi bi-play-fill';
+        // Ігноруємо помилку, якщо це "AbortError" (швидке перемикання)
+        if (e.name !== 'AbortError') {
+             console.warn("Autoplay/Play blocked:", e);
+             this.isPlaying = false;
+             this.ui.playIcon.className = 'bi bi-play-fill';
+        }
     }
   }
 
@@ -151,19 +167,7 @@ export class Player {
     }
   }
 
-  updateAudioAndText(index) {
-    const track = this.playlist[index];
-    this.ui.title.textContent = track.title;
-    this.ui.artist.textContent = track.artist;
-    
-    // Оновлюємо сорс, якщо він змінився (навіть при першому запуску)
-    if (this.audio.src !== track.url) {
-        this.audio.src = track.url;
-        this.ui.progressFill.style.width = '0%';
-        this.ui.currentTime.textContent = '0:00';
-    }
-  }
-
+  // Оновлення списку (API)
   updatePlaylist(newTracks) {
       this.audio.pause();
       this.isPlaying = false;
@@ -172,12 +176,11 @@ export class Player {
       this.playlist = newTracks;
       this.currentIndex = 0;
       this.initCarousel();
-      his.updateAudioAndText(0);
-      
-        const totalChars = this.playlist.reduce((acc, track) => {
-            return acc + track.title.length;
-        }, 0);
-        console.log(`Статистика плейлиста (reduce): ${totalChars} символів у назвах пісень.`);
+      this.updateAudioAndText(0, false); // false - не грати одразу
+  }
+
+  addToPlaylist(moreTracks) {
+      this.playlist = [...this.playlist, ...moreTracks];
   }
 
   seek(e) {
@@ -199,28 +202,26 @@ export class Player {
   }
 
   addEventListeners() {
-    // ... (старі події: ended, timeupdate)
     this.audio.addEventListener('ended', () => this.next());
     this.audio.addEventListener('timeupdate', (e) => this.updateProgress(e));
     
-    // --- НОВЕ: ДІАГНОСТИКА ПОМИЛОК ---
+    // ВИПРАВЛЕНО: Обробка помилок аудіо
     this.audio.addEventListener('error', (e) => {
-        console.error("❌ Помилка відтворення:", this.audio.error);
-        console.warn("🔗 Проблемний URL:", this.audio.src);
-        
-        // Візуально показуємо користувачу, що щось не так
-        this.ui.title.textContent = "Error loading track";
-        this.ui.playIcon.className = 'bi bi-exclamation-triangle-fill'; // Іконка трикутника
-        this.isPlaying = false;
+        // Показуємо помилку тільки якщо ми намагалися грати
+        if (this.isPlaying) {
+            console.error("Audio Load Error:", this.audio.error);
+            this.ui.title.textContent = "Error loading audio";
+            this.ui.title.style.color = '#ff4444';
+            this.isPlaying = false;
+            this.ui.playIcon.className = 'bi bi-exclamation-triangle';
+        }
     });
 
-    // ... (решта коду кнопок)
     this.ui.playBtn.onclick = () => this.togglePlay();
     document.getElementById('next-btn').onclick = () => this.next();
     document.getElementById('prev-btn').onclick = () => this.prev();
     this.ui.progressContainer.onclick = (e) => this.seek(e);
 
-    // Делегування для каруселі
     this.ui.carouselScene.addEventListener('click', (e) => {
         const card = e.target.closest('.diskette');
         if (!card) return;
@@ -228,10 +229,5 @@ export class Player {
         else if (card.classList.contains('pos-prev')) this.prev();
         else if (card.classList.contains('pos-active')) this.togglePlay();
     });
-  }
-
-  addToPlaylist(moreTracks) {
-      this.playlist = [...this.playlist, ...moreTracks];
-      console.log(`Додано ${moreTracks.length} треків. Всього: ${this.playlist.length}`);
   }
 }
