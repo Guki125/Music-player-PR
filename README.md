@@ -19,4 +19,4 @@
 ## 📦 Встановлення та запуск
 1. Клонувати репозиторій:
    ```bash
-   git clone [https://github.com/YOUR-USERNAME/vibe-player.git](https://github.com/YOUR-USERNAME/vibe-player.git)
+   git clone [https://github.com/Guki125/Music-player-PR](https://github.com/Guki125/Music-player-PR)
