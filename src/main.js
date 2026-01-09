@@ -1,4 +1,3 @@
-// src/main.js
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './styles/main.scss';
@@ -6,7 +5,7 @@ import './styles/main.scss';
 import { Player } from './js/player.js';
 import { searchTracks } from './js/api.js';
 
-// --- Конфігурація дефолтного плейлиста ---
+// --- Дефолтний плейлист ---
 const defaultPlaylist = [
   {
     title: "Night Owl",
@@ -29,7 +28,7 @@ const defaultPlaylist = [
 ];
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // --- 1. Логіка прелоадера ---
+  // --- 1. Прелоадер ---
   const welcomeScreen = document.getElementById('welcome-screen');
   if (welcomeScreen) {
       setTimeout(() => {
@@ -37,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }, 2500);
   }
 
-  // --- 2. Змінні стану та елементи UI ---
+  // --- 2. Змінні стану ---
   let currentQuery = '';
   let currentOffset = 0;
   let isSearching = false;
@@ -50,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const loadMoreBtn = document.getElementById('load-more-btn');
   const paginationContainer = document.getElementById('pagination-container');
 
-  // --- 3. Відновлення сесії з LocalStorage ---
+  // --- 3. Відновлення сесії ---
   const savedQuery = localStorage.getItem('lastSearch');
   let startPlaylist = defaultPlaylist;
 
@@ -66,16 +65,14 @@ document.addEventListener('DOMContentLoaded', async () => {
               localStorage.removeItem('lastSearch');
           }
       } catch (e) {
-          console.warn("Збій відновлення сесії, вантажимо дефолт.");
+          console.warn("Session restore failed, using default.");
       }
   }
-
-  console.log("Мій плейлист:", startPlaylist);
 
   // --- 4. Ініціалізація плеєра ---
   const player = new Player(startPlaylist);
 
-  // --- 5. Управління інтерфейсом пошуку ---
+  // --- 5. UI Пошуку ---
   searchToggleBtn.addEventListener('click', () => {
     const isHidden = searchBar.classList.toggle('hidden');
     if (!isHidden) {
@@ -89,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // --- 6. Виконання пошукового запиту ---
+  // --- 6. Виконання пошуку ---
   const performSearch = async () => {
       const query = searchInput.value.trim();
       if (!query || isSearching) return;
@@ -114,8 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               loadMoreBtn.style.display = 'inline-block';
               currentOffset = 25; 
           } else {
-              console.log('API повернуло 0 треків');
-              alert('За вашим запитом нічого не знайдено.');
+              alert('Nothing found.');
               paginationContainer.classList.add('hidden');
           }
       } catch (error) {
@@ -133,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // --- 7. Логіка пагінації (Load More) ---
+  // --- 7. Пагінація (Load More) ---
   loadMoreBtn.addEventListener('click', async () => {
       if (!currentQuery || isSearching) return;
       
@@ -143,11 +139,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       isSearching = true;
 
       try {
-          const moreTracks = await searchTracks(currentQuery, currentOffset);
+          const nextOffset = currentOffset + 25;
+          const moreTracks = await searchTracks(currentQuery, nextOffset);
           
           if (moreTracks && moreTracks.length > 0) {
               player.addToPlaylist(moreTracks);
-              currentOffset += 25;
+              currentOffset = nextOffset;
           } else {
               loadMoreBtn.style.display = 'none';
           }
