@@ -1,7 +1,7 @@
 /* src/styles/main.scss */
 @use "sass:color";
 
-// --- Змінні ---
+// --- Змінні та налаштування кольорів ---
 $bg-dark: #050505;
 $glass-bg: rgba(20, 20, 20, 0.7);
 $glass-border: 1px solid rgba(0, 255, 136, 0.15);
@@ -10,7 +10,7 @@ $text-main: #ffffff;
 $text-muted: #888888;
 $card-bg: #111111;
 
-// --- Глобальні ---
+// --- Глобальні стилі ---
 body {
   margin: 0;
   font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
@@ -24,7 +24,7 @@ body {
   overflow: hidden; 
 }
 
-// --- Контейнер ---
+// --- Головний контейнер плеєра ---
 .player-container {
   position: relative;
   width: 900px;
@@ -42,19 +42,17 @@ body {
   overflow: hidden;
   transition: all 0.3s ease;
 
-  // --- MOBILE ADAPTATION ---
   @media (max-width: 768px) {
     width: 100%;
     height: 100dvh; 
     border-radius: 0; 
     border: none;
-    
     grid-template-columns: 1fr; 
     grid-template-rows: 45% 55%; 
   }
 }
 
-// --- Карусель ---
+// --- Секція каруселі обкладинок ---
 .album-art-carousel {
   position: relative;
   width: 100%;
@@ -83,7 +81,7 @@ body {
   }
 }
 
-// Стилі Дискет
+// --- Стилі карток (дискет) ---
 .diskette {
   position: absolute;
   top: 0;
@@ -110,7 +108,6 @@ body {
     pointer-events: none;
   }
 
-  // СТАНИ
   &.pos-active {
     transform: translate3d(0, 0, 0) scale(1);
     opacity: 1;
@@ -165,7 +162,7 @@ body {
   }
 }
 
-// --- Інфо Панель ---
+// --- Права панель з інформацією ---
 .player-info-panel {
   display: flex;
   flex-direction: column;
@@ -183,7 +180,7 @@ body {
   }
 }
 
-// Навігація
+// --- Навігаційне меню ---
 .player-nav {
   display: flex;
   justify-content: space-between;
@@ -200,7 +197,6 @@ body {
     font-size: 1.3rem;
     cursor: pointer;
     transition: color 0.3s;
-    // ВАЖЛИВО: Кнопки завжди зверху і на своєму місці
     position: relative;
     z-index: 100; 
 
@@ -216,13 +212,12 @@ body {
     font-size: 0.9rem;
     letter-spacing: 2px;
     text-transform: uppercase;
-    // Щоб текст не налізав на кнопки
     margin: 0 10px;
     text-align: center;
   }
 }
 
-// --- ПОШУК ---
+// --- Поле пошуку ---
 .search-bar {
     position: absolute;
     top: 35px; 
@@ -259,28 +254,22 @@ body {
     }
 }
 
-// --- ТРЕК (ВИПРАВЛЕННЯ ДОВГИХ НАЗВ) ---
+// --- Інформація про трек (Обрізка довгих назв) ---
 .track-info {
   margin-bottom: 30px;
   position: relative;
   z-index: 25;
-  // Важливо: контейнер не повинен виходити за межі батька
   max-width: 100%;
   
   h2 {
     font-size: clamp(1.8rem, 5vw, 2.5rem); 
     font-weight: 800;
     margin: 0 0 5px 0;
-    
-    // ВАЖЛИВО: Ці 3 рядки обрізають довгий текст
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    
-    // Гарантуємо, що текст не розтягне контейнер
     max-width: 100%; 
     
-    // На ПК можна задати фіксовану максимальну ширину, якщо треба
     @media (min-width: 769px) {
         max-width: 350px;
     }
@@ -293,7 +282,6 @@ body {
     text-transform: uppercase;
     letter-spacing: 1.5px;
     margin: 0;
-    // Те саме для імені виконавця
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -301,7 +289,7 @@ body {
   }
 }
 
-// Прогрес
+// --- Прогрес-бар ---
 .progress-area {
   margin-bottom: 40px;
   position: relative;
@@ -342,7 +330,7 @@ body {
   }
 }
 
-// Контроли
+// --- Кнопки керування ---
 .controls {
   display: flex;
   align-items: center;
@@ -395,14 +383,14 @@ body {
   }
 }
 
-// Кнопка Load More
+// --- Кнопка "Завантажити ще" (Пагінація) ---
 #pagination-container {
     @media (max-width: 768px) {
         bottom: 20px;
     }
 }
 
-// ПРЕЛОАДЕР (той самий код)
+// --- Вітальний екран (Preloader) ---
 #welcome-screen {
     position: fixed;
     top: 0;

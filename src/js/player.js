@@ -9,7 +9,7 @@ export class Player {
     this.isAnimating = false;
     this.audio = document.getElementById('audio-element');
 
-    // Перевірка наявності елементів
+    // Перевірка DOM-елементів каруселі
     const diskElements = Array.from(document.querySelectorAll('.diskette'));
     if (diskElements.length !== 3) {
         console.error("Critical: Need 3 .diskette elements");
@@ -34,13 +34,13 @@ export class Player {
       carouselScene: document.querySelector('.carousel-scene')
     };
 
-    // Ініціалізація
+    // Початковий запуск
     this.initCarousel();
-    this.updateAudioAndText(this.currentIndex, false); // false = не автоплей
+    this.updateAudioAndText(this.currentIndex, false);
     this.addEventListeners();
   }
 
-  // ... (getSafeIndex та initCarousel без змін) ...
+  // --- Логіка каруселі та навігація ---
   getSafeIndex(index) {
     const len = this.playlist.length;
     return (index % len + len) % len;
@@ -60,15 +60,14 @@ export class Player {
     this.items[2].el.className = 'diskette pos-next';
   }
 
-  // Навігація
   next() {
     if (this.isAnimating) return;
     this.isAnimating = true;
 
     this.currentIndex = this.getSafeIndex(this.currentIndex + 1);
-    this.updateAudioAndText(this.currentIndex, this.isPlaying); // Граємо тільки якщо вже грали
+    this.updateAudioAndText(this.currentIndex, this.isPlaying);
 
-    // Анімація...
+    // Анімація переходу вправо
     this.items[0].el.className = 'diskette pos-hidden-left';
     this.items[1].el.className = 'diskette pos-prev';
     this.items[2].el.className = 'diskette pos-active';
@@ -97,6 +96,7 @@ export class Player {
     this.currentIndex = this.getSafeIndex(this.currentIndex - 1);
     this.updateAudioAndText(this.currentIndex, this.isPlaying);
 
+    // Анімація переходу вліво
     this.items[2].el.className = 'diskette pos-hidden-right';
     this.items[1].el.className = 'diskette pos-next';
     this.items[0].el.className = 'diskette pos-active';
@@ -118,24 +118,19 @@ export class Player {
     }, 500);
   }
 
-  // Оновлена логіка аудіо
+  // --- Керування аудіо та станом ---
   updateAudioAndText(index, shouldPlay = false) {
     const track = this.playlist[index];
     
-    // Оновлюємо текст
     this.ui.title.textContent = track.title;
     this.ui.artist.textContent = track.artist;
-    
-    // Скидаємо стилі помилки (якщо були)
     this.ui.title.style.color = ''; 
     
-    // Якщо трек новий - міняємо src
     if (this.audio.src !== track.url) {
         this.audio.src = track.url;
         this.ui.progressFill.style.width = '0%';
         this.ui.currentTime.textContent = '0:00';
         
-        // ВАЖЛИВО: Не викликаємо play(), якщо це ініціалізація
         if (shouldPlay) {
             this.playSafely();
         }
@@ -148,7 +143,6 @@ export class Player {
         this.isPlaying = true;
         this.ui.playIcon.className = 'bi bi-pause-fill';
     } catch (e) {
-        // Ігноруємо помилку, якщо це "AbortError" (швидке перемикання)
         if (e.name !== 'AbortError') {
              console.warn("Autoplay/Play blocked:", e);
              this.isPlaying = false;
@@ -167,7 +161,7 @@ export class Player {
     }
   }
 
-  // Оновлення списку (API)
+  // --- Управління плейлистом ---
   updatePlaylist(newTracks) {
       this.audio.pause();
       this.isPlaying = false;
@@ -176,13 +170,14 @@ export class Player {
       this.playlist = newTracks;
       this.currentIndex = 0;
       this.initCarousel();
-      this.updateAudioAndText(0, false); // false - не грати одразу
+      this.updateAudioAndText(0, false);
   }
 
   addToPlaylist(moreTracks) {
       this.playlist = [...this.playlist, ...moreTracks];
   }
 
+  // --- Прогрес-бар та час ---
   seek(e) {
     const width = this.ui.progressContainer.clientWidth;
     const clickX = e.offsetX;
@@ -201,13 +196,12 @@ export class Player {
     this.ui.duration.textContent = formatTime(duration);
   }
 
+  // --- Слухачі подій ---
   addEventListeners() {
     this.audio.addEventListener('ended', () => this.next());
     this.audio.addEventListener('timeupdate', (e) => this.updateProgress(e));
     
-    // ВИПРАВЛЕНО: Обробка помилок аудіо
     this.audio.addEventListener('error', (e) => {
-        // Показуємо помилку тільки якщо ми намагалися грати
         if (this.isPlaying) {
             console.error("Audio Load Error:", this.audio.error);
             this.ui.title.textContent = "Error loading audio";

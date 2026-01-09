@@ -6,7 +6,7 @@ import './styles/main.scss';
 import { Player } from './js/player.js';
 import { searchTracks } from './js/api.js';
 
-// --- НАДІЙНИЙ ПЛЕЙЛИСТ (FMA + SoundHelix) ---
+// --- Конфігурація дефолтного плейлиста ---
 const defaultPlaylist = [
   {
     title: "Night Owl",
@@ -29,7 +29,7 @@ const defaultPlaylist = [
 ];
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // --- 0. PRELOADER LOGIC ---
+  // --- 1. Логіка прелоадера ---
   const welcomeScreen = document.getElementById('welcome-screen');
   if (welcomeScreen) {
       setTimeout(() => {
@@ -37,12 +37,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       }, 2500);
   }
 
-  // Змінні стану
+  // --- 2. Змінні стану та елементи UI ---
   let currentQuery = '';
   let currentOffset = 0;
   let isSearching = false;
 
-  // Елементи UI
   const searchInput = document.getElementById('search-input');
   const searchBar = document.getElementById('search-bar');
   const searchToggleBtn = document.getElementById('search-toggle-btn');
@@ -51,13 +50,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const loadMoreBtn = document.getElementById('load-more-btn');
   const paginationContainer = document.getElementById('pagination-container');
 
-  // --- 1. Відновлення сесії ---
+  // --- 3. Відновлення сесії з LocalStorage ---
   const savedQuery = localStorage.getItem('lastSearch');
   let startPlaylist = defaultPlaylist;
 
   if (savedQuery) {
       try {
-          // Пробуємо відновити пошук
           const results = await searchTracks(savedQuery, 0);
           if (results && results.length > 0) {
               startPlaylist = results;
@@ -72,10 +70,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
   }
 
-  // --- 2. Старт плеєра ---
+  console.log("Мій плейлист:", startPlaylist);
+
+  // --- 4. Ініціалізація плеєра ---
   const player = new Player(startPlaylist);
 
-  // --- 3. UI Пошуку ---
+  // --- 5. Управління інтерфейсом пошуку ---
   searchToggleBtn.addEventListener('click', () => {
     const isHidden = searchBar.classList.toggle('hidden');
     if (!isHidden) {
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // --- 4. Логіка пошуку ---
+  // --- 6. Виконання пошукового запиту ---
   const performSearch = async () => {
       const query = searchInput.value.trim();
       if (!query || isSearching) return;
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // --- 5. Логіка "Load More" ---
+  // --- 7. Логіка пагінації (Load More) ---
   loadMoreBtn.addEventListener('click', async () => {
       if (!currentQuery || isSearching) return;
       

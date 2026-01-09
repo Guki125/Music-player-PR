@@ -3,11 +3,12 @@ import axios from 'axios';
 
 const BASE_URL = 'https://itunes.apple.com/search';
 
+// --- Функція пошуку треків ---
 export async function searchTracks(query, offset = 0) {
-  // Якщо запит пустий, одразу повертаємо пустий масив
   if (!query) return [];
 
   try {
+    // --- 1. Виконання запиту до iTunes API ---
     const response = await axios.get(BASE_URL, {
       params: {
         term: query,
@@ -22,32 +23,29 @@ export async function searchTracks(query, offset = 0) {
         return [];
     }
 
+    // --- 2. Фільтрація та форматування даних ---
     const results = response.data.results;
 
-    // Жорстка фільтрація: Тільки треки з прев'ю і картинкою
+    // Фільтруємо треки без прев'ю або обкладинки
     const validResults = results.filter(track => 
         track.previewUrl && 
         track.artworkUrl100
     );
 
-    const formattedTracks = validResults.map(track => {
-      // Хак для якості картинки
-      const highResCover = track.artworkUrl100.replace('100x100bb', '600x600bb');
+    // Форматуємо об'єкти для зручного використання в плеєрі
+    return validResults.map(track => {
       return {
         title: track.trackName,
         artist: track.artistName,
-        cover: highResCover,
+        cover: track.artworkUrl100.replace('100x100bb', '600x600bb'), // Підвищення якості зображення
         url: track.previewUrl,
         id: track.trackId
       };
     });
 
-    return formattedTracks;
-
   } catch (error) {
+    // --- 3. Обробка помилок ---
     console.error('API Request failed:', error);
-    // Повертаємо пустий масив замість викидання помилки, 
-    // щоб не ламати інтерфейс "червоним" алертом
     return []; 
   }
 }
