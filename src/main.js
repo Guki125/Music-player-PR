@@ -1,3 +1,4 @@
+// src/main.js
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './styles/main.scss';
@@ -65,12 +66,15 @@ document.addEventListener('DOMContentLoaded', async () => {
               localStorage.removeItem('lastSearch');
           }
       } catch (e) {
-          console.warn("Session restore failed, using default.");
+          console.warn("Session restore failed.");
       }
   }
 
   // --- 4. Ініціалізація плеєра ---
   const player = new Player(startPlaylist);
+  
+  // Виводимо початковий стан плейлиста
+  console.log("Initial Playlist:", player.playlist);
 
   // --- 5. UI Пошуку ---
   searchToggleBtn.addEventListener('click', () => {
@@ -109,7 +113,13 @@ document.addEventListener('DOMContentLoaded', async () => {
               
               paginationContainer.classList.remove('hidden');
               loadMoreBtn.style.display = 'inline-block';
+              
               currentOffset = 25; 
+              
+              // Лог нового пошуку
+              console.clear();
+              console.log(`New Search: "${query}"`);
+              console.log("Playlist Updated:", player.playlist);
           } else {
               alert('Nothing found.');
               paginationContainer.classList.add('hidden');
@@ -139,13 +149,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       isSearching = true;
 
       try {
-          const nextOffset = currentOffset + 25;
-          const moreTracks = await searchTracks(currentQuery, nextOffset);
+          const moreTracks = await searchTracks(currentQuery, currentOffset);
           
           if (moreTracks && moreTracks.length > 0) {
+              // Додаємо треки
               player.addToPlaylist(moreTracks);
-              currentOffset = nextOffset;
+              currentOffset += 25;
+              
+              // --- ДИНАМІЧНИЙ ВИВІД В КОНСОЛЬ ---
+              console.group("📥 Load More Action");
+              console.log(`Added ${moreTracks.length} new tracks.`);
+              console.log(`Total tracks in playlist: ${player.playlist.length}`);
+              console.log("Full Playlist Data:", player.playlist); // Тут буде весь масив
+              console.groupEnd();
+              
+              // Alert для підтвердження (можна прибрати)
+              // alert(`Loaded +${moreTracks.length} tracks! Total: ${player.playlist.length}`);
           } else {
+              console.log("No more tracks available.");
               loadMoreBtn.style.display = 'none';
           }
       } catch (e) {
